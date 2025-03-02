@@ -64,6 +64,7 @@ export const MicTest = () => {
       ) : (
         "no open sockets"
       )}
+      {mics.length ? "" : "no mics found"}
       {mics.map((m) => {
         return (
           <div key={m.device.deviceId}>

@@ -1,4 +1,5 @@
-import RecordRTC from "recordrtc";
+import "url-polyfill";
+import type RecordRTC from "recordrtc";
 import { SAMPLE_RATE } from "./gladia/SAMPLE_RATE";
 
 export type ChunkCallback = (buf: ArrayBuffer) => void;
@@ -13,7 +14,7 @@ export async function listenToAudioDevice(
     audio: inputDevice ? { deviceId: { exact: inputDevice } } : true,
   });
 
-  // const RecordRTC = (await import("recordrtc")).default;
+  const RecordRTC = (await import("recordrtc")).default;
 
   const recorder = new RecordRTC(audioStream, {
     type: "audio",
