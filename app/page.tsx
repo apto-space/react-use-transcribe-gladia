@@ -1,7 +1,7 @@
 "use client";
 
 import { GLADIA_API_KEY } from "./constants";
-import { MicTest } from "./mic/useTranscribeMic";
+import { MicTest } from "react-use-transcribe-gladia";
 
 export default function Home() {
   return (
