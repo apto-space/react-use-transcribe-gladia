@@ -1,5 +1,5 @@
 "use client";
-import { MicTest } from "./useMic";
+import { MicTest } from "./mic/useMic";
 
 export default function Home() {
   return (
