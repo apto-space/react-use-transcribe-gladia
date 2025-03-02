@@ -1,11 +1,12 @@
 {
-  "name": "react-use-transcribe-gladia",
+  "name": "@apto-space/react-use-transcribe-gladia",
   "version": "0.1.0",
   "description": "React hook for real-time audio transcription using Gladia API",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "build": "tsc",
+    "update-readme": "node scripts/update-readme.js",
+    "build": "node scripts/update-readme.js && tsc",
     "prepare": "yarn build"
   },
   "files": [

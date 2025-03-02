@@ -5,20 +5,20 @@ import { GladiaWsMessage } from "./gladia/client";
 
 export const MicTest = (args: { gladia_api_key: string }) => {
   const mics = useTranscribeMic(args);
-  const [openSockets, setOpenSockets] = useState<(() => void)[]>([]);
+  const [openStreams, setOpenStreams] = useState<(() => void)[]>([]);
   useEffect(() => {
     return () => {
-      openSockets.forEach((x) => x());
+      openStreams.forEach((close) => close());
     };
   }, []);
   const [messages, setMessages] = useState<GladiaWsMessage[]>([]);
   return (
     <div>
-      {openSockets.length ? (
+      {openStreams.length ? (
         <button
           onClick={() => {
-            openSockets.forEach((x) => x());
-            setOpenSockets([]);
+            openStreams.forEach((close) => close());
+            setOpenStreams([]);
           }}
         >
           close
@@ -41,7 +41,7 @@ export const MicTest = (args: { gladia_api_key: string }) => {
                     ]);
                   }
                 );
-                setOpenSockets([...openSockets, closeConn]);
+                setOpenStreams([...openStreams, closeConn]);
               }}
             >
               {"stream transcribe "}
