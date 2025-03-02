@@ -5,19 +5,19 @@ import { createGladiaWebSocket } from "./gladia/client";
 import { initiateSession } from "./gladia/server";
 import { ChunkCallback, listenToAudioDevice } from "./listenToChunks";
 import { useMic } from "./useMic";
-import { GLADIA_API_KEY } from "../constants";
 
-export const connectToGladia = async (cb: (msg: GladiaWsMessage) => void) => {
-  const session = await initiateSession(GLADIA_API_KEY);
-  const { sendBuffer, close } = createGladiaWebSocket(session, {
-    onMessage: (data) => {
-      cb(data);
-    },
-  });
-  return { sendBuffer, close };
-};
+export const connectToGladia =
+  (gladia_api_key: string) => async (cb: (msg: GladiaWsMessage) => void) => {
+    const session = await initiateSession(gladia_api_key);
+    const { sendBuffer, close } = createGladiaWebSocket(session, {
+      onMessage: (data) => {
+        cb(data);
+      },
+    });
+    return { sendBuffer, close };
+  };
 
-const useTranscribeMic = () => {
+const useTranscribeMic = ({ gladia_api_key }: { gladia_api_key: string }) => {
   const audioDevices = useMic();
 
   return audioDevices.map((device) => {
@@ -25,7 +25,7 @@ const useTranscribeMic = () => {
       device,
       stream: (cb: ChunkCallback) => listenToAudioDevice(device.deviceId, cb),
       streamTranscribe: async (cb: (msg: GladiaWsMessage) => void) => {
-        const { sendBuffer, close } = await connectToGladia(cb);
+        const { sendBuffer, close } = await connectToGladia(gladia_api_key)(cb);
         const { recorder, audioStream } = await listenToAudioDevice(
           device.deviceId,
           sendBuffer
@@ -41,8 +41,8 @@ const useTranscribeMic = () => {
   });
 };
 
-export const MicTest = () => {
-  const mics = useTranscribeMic();
+export const MicTest = (args: { gladia_api_key: string }) => {
+  const mics = useTranscribeMic(args);
   const [openSockets, setOpenSockets] = useState<(() => void)[]>([]);
   useEffect(() => {
     return () => {
