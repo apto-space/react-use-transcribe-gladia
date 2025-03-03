@@ -3,17 +3,22 @@ import { useState, useEffect } from "react";
 import { useTranscribeMic, GladiaWsMessage } from ".";
 
 export const MicTest = (args: { gladia_api_key: string }) => {
+  // get mic list
   const mics = useTranscribeMic(args);
+  // track running mics that transcribe
   const [openStreams, setOpenStreams] = useState<(() => void)[]>([]);
+  // close connection with gladia when component unmounts
   useEffect(() => {
     return () => {
       openStreams.forEach((close) => close());
     };
   }, []);
+  // track the messages transribed by gladia
   const [messages, setMessages] = useState<GladiaWsMessage[]>([]);
   return (
     <div>
       {openStreams.length ? (
+        // close manually
         <button
           onClick={() => {
             openStreams.forEach((close) => close());

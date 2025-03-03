@@ -21,17 +21,7 @@ Instead:
 1. Set up a backend service to handle API calls
 2. Use environment variables on your server
 
-## Examples
-
-### Basic Demo Component
-
-You can find a complete demo implementation in the package's source code at `src/Demo.tsx`. The demo showcases:
-- Multiple microphone handling
-- WebSocket connection management
-- Real-time message handling
-- Clean connection cleanup on unmount
-
-Here's a simplified example component with status indicators and error handling:
+## Basic usage
 
 ```tsx ./src/Demo.tsx
 import React from "react";
@@ -39,17 +29,22 @@ import { useState, useEffect } from "react";
 import { useTranscribeMic, GladiaWsMessage } from "@apto-space/react-use-transcribe-gladia";
 
 export const MicTest = (args: { gladia_api_key: string }) => {
+  // get mic list
   const mics = useTranscribeMic(args);
+  // track running mics that transcribe
   const [openStreams, setOpenStreams] = useState<(() => void)[]>([]);
+  // close connection with gladia when component unmounts
   useEffect(() => {
     return () => {
       openStreams.forEach((close) => close());
     };
   }, []);
+  // track the messages transribed by gladia
   const [messages, setMessages] = useState<GladiaWsMessage[]>([]);
   return (
     <div>
       {openStreams.length ? (
+        // close manually
         <button
           onClick={() => {
             openStreams.forEach((close) => close());

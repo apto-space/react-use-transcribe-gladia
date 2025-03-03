@@ -2,7 +2,7 @@ const fs = require("fs");
 const path = require("path");
 
 // Paths are relative to the project root
-const README_PATH = path.join(__dirname, "..", "README.md");
+const README_PATH = path.join(__dirname, "../..", "README.md");
 const DEMO_PATH = path.join(__dirname, "..", "src", "Demo.tsx");
 const PACKAGE_JSON_PATH = path.join(__dirname, "..", "package.json");
 
