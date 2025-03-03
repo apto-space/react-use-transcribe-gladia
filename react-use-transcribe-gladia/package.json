@@ -7,7 +7,7 @@
   "scripts": {
     "update-readme": "node scripts/update-readme.js",
     "build": "node scripts/update-readme.js && tsc",
-    "prepare": "yarn build"
+    "prepare": "bun run build"
   },
   "files": [
     "dist",

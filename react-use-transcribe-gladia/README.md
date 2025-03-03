@@ -8,27 +8,8 @@ A React hook for real-time audio transcription using the Gladia API.
 npm install react-use-transcribe-gladia
 # or
 yarn add react-use-transcribe-gladia
-```
-
-## Usage
-
-```tsx
-import { useTranscribeMic } from 'react-use-transcribe-gladia';
-
-function YourComponent() {
-  const { startRecording, stopRecording, isRecording, transcription } = useTranscribeMic({
-    gladia_api_key: 'YOUR_API_KEY'
-  });
-
-  return (
-    <div>
-      <button onClick={isRecording ? stopRecording : startRecording}>
-        {isRecording ? 'Stop Recording' : 'Start Recording'}
-      </button>
-      <p>{transcription}</p>
-    </div>
-  );
-}
+# bun
+bun add react-use-transcribe-gladia
 ```
 
 ## ⚠️ Security Warning
