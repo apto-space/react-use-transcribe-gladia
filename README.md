@@ -1,36 +1,110 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# react-use-transcribe-gladia
 
-## Getting Started
+A React hook for real-time audio transcription using the Gladia API.
 
-First, run the development server:
+## Installation
 
 ```bash
-npm run dev
+npm install react-use-transcribe-gladia
 # or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+yarn add react-use-transcribe-gladia
+# bun
+bun add react-use-transcribe-gladia
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## ⚠️ Security Warning
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+**IMPORTANT**: The current implementation requires passing the Gladia API key directly to the hook. This means the API key will be exposed in your client-side code. This is not secure for production applications.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+For production use, you should never expose your API key in client-side code.
+Instead:
+1. Set up a backend service to handle API calls
+2. Use environment variables on your server
 
-## Learn More
+## Examples
 
-To learn more about Next.js, take a look at the following resources:
+### Basic Demo Component
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+You can find a complete demo implementation in the package's source code at `src/Demo.tsx`. The demo showcases:
+- Multiple microphone handling
+- WebSocket connection management
+- Real-time message handling
+- Clean connection cleanup on unmount
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Here's a simplified example component with status indicators and error handling:
 
-## Deploy on Vercel
+```tsx ./src/Demo.tsx
+import React from "react";
+import { useState, useEffect } from "react";
+import { useTranscribeMic, GladiaWsMessage } from "@apto-space/react-use-transcribe-gladia";
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+export const MicTest = (args: { gladia_api_key: string }) => {
+  const mics = useTranscribeMic(args);
+  const [openStreams, setOpenStreams] = useState<(() => void)[]>([]);
+  useEffect(() => {
+    return () => {
+      openStreams.forEach((close) => close());
+    };
+  }, []);
+  const [messages, setMessages] = useState<GladiaWsMessage[]>([]);
+  return (
+    <div>
+      {openStreams.length ? (
+        <button
+          onClick={() => {
+            openStreams.forEach((close) => close());
+            setOpenStreams([]);
+          }}
+        >
+          close
+        </button>
+      ) : (
+        "no open sockets"
+      )}
+      {mics.length ? "" : "no mics found"}
+      {mics.map((mic) => {
+        return (
+          <div key={mic.device.deviceId}>
+            {mic.device.label}
+            <button
+              onClick={async () => {
+                const closeConn = await mic.streamTranscribe(
+                  (message: GladiaWsMessage) => {
+                    setMessages((prevMessages: GladiaWsMessage[]) => [
+                      ...prevMessages,
+                      message,
+                    ]);
+                  }
+                );
+                setOpenStreams([...openStreams, closeConn]);
+              }}
+            >
+              {"stream transcribe "}
+            </button>
+          </div>
+        );
+      })}
+      {JSON.stringify(messages, null, 2)}
+    </div>
+  );
+};
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```
+
+This example includes:
+- Recording status indicators
+- Error handling and display
+- Processing state feedback
+- Styled components (using Tailwind CSS classes)
+- Environment variable usage for API key
+
+For a more advanced implementation with multiple microphone support and WebSocket handling, refer to the `src/Demo.tsx` file in the package source code.
+
+## Requirements
+
+- React 16.8.0 or higher
+- A Gladia API key
+
+## License
+
+MIT 
