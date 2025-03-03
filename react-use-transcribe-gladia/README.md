@@ -16,11 +16,10 @@ bun add react-use-transcribe-gladia
 
 **IMPORTANT**: The current implementation requires passing the Gladia API key directly to the hook. This means the API key will be exposed in your client-side code. This is not secure for production applications.
 
-For production use, you should:
-- Never expose your API key in client-side code
-- Set up a backend service to handle API calls
-- Use environment variables on your server
-- Consider implementing token-based authentication
+For production use, you should never expose your API key in client-side code.
+Instead:
+1. Set up a backend service to handle API calls
+2. Use environment variables on your server
 
 ## Examples
 
@@ -37,8 +36,7 @@ Here's a simplified example component with status indicators and error handling:
 ```tsx ./src/Demo.tsx
 import React from "react";
 import { useState, useEffect } from "react";
-import { useTranscribeMic } from "./useTranscribeMic";
-import { GladiaWsMessage } from "./gladia/client";
+import { useTranscribeMic, GladiaWsMessage } from "@apto-space/react-use-transcribe-gladia";
 
 export const MicTest = (args: { gladia_api_key: string }) => {
   const mics = useTranscribeMic(args);

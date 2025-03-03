@@ -1,7 +1,6 @@
 import React from "react";
 import { useState, useEffect } from "react";
-import { useTranscribeMic } from "./useTranscribeMic";
-import { GladiaWsMessage } from "./gladia/client";
+import { useTranscribeMic, GladiaWsMessage } from ".";
 
 export const MicTest = (args: { gladia_api_key: string }) => {
   const mics = useTranscribeMic(args);
