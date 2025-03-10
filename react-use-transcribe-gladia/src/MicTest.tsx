@@ -1,6 +1,4 @@
 "use client";
-import { useState, useEffect } from "react";
-import { GladiaWsMessage } from "../gladia-types";
 import { UseTranscribeMicProps, useTranscribeMic } from "./useTranscribeMic";
 
 export const MicTest = ({ endpoint }: UseTranscribeMicProps = {}) => {

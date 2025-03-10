@@ -1,14 +1,12 @@
-import { z } from "zod";
+import {
+  GladiaWsMessage,
+  GladiaWsMessageSchema,
+} from "../../../app/gladia-types";
 
-const GladiaWsMessageSchema = z.object({
-  type: z.literal("transcript"),
-  data: z.object({
-    utterance: z.object({
-      text: z.string(),
-    }),
-  }),
-});
-export type GladiaWsMessage = z.infer<typeof GladiaWsMessageSchema>;
+export {
+  GladiaWsMessage,
+  GladiaWsMessageSchema,
+} from "../../../app/gladia-types";
 
 type GladiaWebSocket = {
   sendBuffer: (buffer: ArrayBuffer) => void;
@@ -38,7 +36,9 @@ export const createGladiaWebSocket = (
         return;
       }
       const data = data_.data;
-      onMessage?.(data);
+      if (data?.type === "transcript" && data.data?.utterance?.text) {
+        onMessage?.(data);
+      }
     } catch (err) {
       console.error("Error parsing message", err);
     }
@@ -46,7 +46,7 @@ export const createGladiaWebSocket = (
 
   return {
     sendBuffer: (buffer: ArrayBuffer) => {
-      socket.readyState === WebSocket.OPEN && socket.send(buffer);
+      socket.readyState === WebSocket.OPEN && socket.send(buffer.slice(44));
     },
     close: () => socket.close(),
   };

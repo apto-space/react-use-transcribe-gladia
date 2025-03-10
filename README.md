@@ -14,91 +14,160 @@ bun add react-use-transcribe-gladia
 
 ## ⚠️ Security Warning
 
-**IMPORTANT**: The current implementation requires passing the Gladia API key directly to the hook. This means the API key will be exposed in your client-side code. This is not secure for production applications.
+**IMPORTANT**: For production applications, you should never expose your Gladia API key in client-side code. Instead, set up a backend service to handle API calls securely.
 
-For production use, you should never expose your API key in client-side code.
-Instead:
-1. Set up a backend service to handle API calls
-2. Use environment variables on your server
+## Setup
+
+1. Create an API endpoint in your backend (e.g., using Next.js API routes):
+
+```typescript
+```
+
+2. Set up your environment variables:
+```env
+# .env.local
+GLADIA_API_KEY=your_gladia_api_key_here
+```
 
 ## Basic usage
 
-```tsx ./src/Demo.tsx
+```tsx
 import React from "react";
 import { useState, useEffect } from "react";
 import { useTranscribeMic, GladiaWsMessage } from "@apto-space/react-use-transcribe-gladia";
 
-export const MicTest = (args: { gladia_api_key: string }) => {
-  // get mic list
-  const mics = useTranscribeMic(args);
+export const MicTest = () => {
+  // get mic list and transcription status
+  const { mics, requestPermissions } = useTranscribeMic();
+  
   // track running mics that transcribe
-  const [openStreams, setOpenStreams] = useState<(() => void)[]>([]);
+  const [openSockets, setOpenSockets] = useState<(() => void)[]>([]);
+  
   // close connection with gladia when component unmounts
   useEffect(() => {
     return () => {
-      openStreams.forEach((close) => close());
+      openSockets.forEach((x) => x());
     };
-  }, []);
-  // track the messages transribed by gladia
+  }, [openSockets]);
+  
+  // track the messages transcribed by gladia
   const [messages, setMessages] = useState<GladiaWsMessage[]>([]);
+
   return (
-    <div>
-      {openStreams.length ? (
-        // close manually
-        <button
-          onClick={() => {
-            openStreams.forEach((close) => close());
-            setOpenStreams([]);
-          }}
+    <div className="w-full max-w-2xl mx-auto space-y-6 p-6 bg-white rounded-lg shadow-lg">
+      <div className="flex items-center justify-between gap-4">
+        <button 
+          onClick={requestPermissions}
+          className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
         >
-          close
+          Request Microphone Access
         </button>
-      ) : (
-        "no open sockets"
+        
+        {openSockets.length > 0 && (
+          <button
+            onClick={() => {
+              openSockets.forEach((x) => x());
+              setOpenSockets([]);
+            }}
+            className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
+          >
+            Stop Recording
+          </button>
+        )}
+      </div>
+
+      {mics.length === 0 && (
+        <div className="p-4 bg-yellow-50 text-yellow-700 rounded-md">
+          No microphones found. Please connect a microphone and grant permission.
+        </div>
       )}
-      {mics.length ? "" : "no mics found"}
-      {mics.map((mic) => {
-        return (
-          <div key={mic.device.deviceId}>
-            {mic.device.label}
-            <button
-              onClick={async () => {
-                const closeConn = await mic.streamTranscribe(
-                  (message: GladiaWsMessage) => {
-                    setMessages((prevMessages: GladiaWsMessage[]) => [
-                      ...prevMessages,
-                      message,
-                    ]);
-                  }
-                );
-                setOpenStreams([...openStreams, closeConn]);
-              }}
-            >
-              {"stream transcribe "}
-            </button>
+
+      {mics.length > 0 && (
+        <div className="space-y-4">
+          <h2 className="text-lg font-semibold text-gray-700">Available Microphones</h2>
+          <div className="grid gap-3">
+            {mics.map((m) => (
+              <div 
+                key={m.device.deviceId}
+                className="flex items-center justify-between p-4 bg-gray-50 rounded-lg"
+              >
+                <span className="text-gray-700">{m.device.label || "Unnamed Microphone"}</span>
+                <button
+                  onClick={async () => {
+                    const closeConn = await m.streamTranscribe((x) => {
+                      setMessages((messages) => [...messages, x]);
+                    });
+                    setOpenSockets([...openSockets, closeConn]);
+                  }}
+                  className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors disabled:opacity-50"
+                  disabled={openSockets.length > 0}
+                >
+                  Start Transcription
+                </button>
+              </div>
+            ))}
           </div>
-        );
-      })}
-      {JSON.stringify(messages, null, 2)}
+        </div>
+      )}
+
+      {messages.length > 0 && (
+        <div className="space-y-3">
+          <h2 className="text-lg font-semibold text-gray-700">Transcription</h2>
+          <div className="h-64 overflow-y-auto p-4 bg-gray-50 rounded-lg space-y-2">
+            {messages.map((msg, idx) => (
+              <div 
+                key={idx}
+                className="p-2 bg-white rounded border border-gray-200"
+              >
+                {JSON.stringify(msg, null, 2)}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 };
-
 ```
 
-This example includes:
-- Recording status indicators
-- Error handling and display
-- Processing state feedback
-- Styled components (using Tailwind CSS classes)
-- Environment variable usage for API key
+## Advanced Usage
 
-For a more advanced implementation with multiple microphone support and WebSocket handling, refer to the `src/Demo.tsx` file in the package source code.
+### Custom Endpoint
+
+You can specify a custom endpoint for the Gladia session creation:
+
+```tsx
+const { mics, requestPermissions } = useTranscribeMic({ 
+  endpoint: "/custom/gladia/endpoint" 
+});
+```
+
+### Using the Hook Directly
+
+```tsx
+const { mics, requestPermissions } = useTranscribeMic();
+// or with custom endpoint
+const { mics, requestPermissions } = useTranscribeMic({ 
+  endpoint: "/custom/endpoint" 
+});
+```
+
+## Features
+
+- Real-time audio transcription
+- Multiple microphone support
+- WebSocket connection management
+- Automatic cleanup on unmount
+- Styled UI components (using Tailwind CSS)
+- Secure API key handling through backend endpoints
+- Error handling and status feedback
 
 ## Requirements
 
 - React 16.8.0 or higher
 - A Gladia API key
+- Modern browser with WebSocket support
+- Microphone access permissions
 
 ## License
 

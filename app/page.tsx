@@ -1,6 +1,6 @@
 "use server";
 
-import { MicTest } from "./mic/MicTest";
+import { MicTest } from "~/react-use-transcribe-gladia/src";
 
 export default async function Home() {
   return (
