@@ -24,6 +24,18 @@ export const useTranscribeMic = ({ endpoint }: UseTranscribeMicProps = {}) => {
         streamTranscribe: async () => {
           const { sendBuffer, close } = await connectToGladia(endpoint)(
             (msg: GladiaWsMessage) => {
+              const lastMessage = messages[messages.length - 1];
+              const lastMessageText =
+                lastMessage?.type === "transcript"
+                  ? lastMessage.data.utterance.text
+                  : "";
+
+              if (msg.type === "transcript") {
+                if (lastMessageText === msg.data.utterance.text) {
+                  // prevent duplicate transcriptions as it often happens with gladia
+                  return;
+                }
+              }
               setMessages((prev) => [...prev, msg]);
             }
           );
