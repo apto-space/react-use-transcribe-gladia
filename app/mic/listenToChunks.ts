@@ -11,7 +11,13 @@ export async function listenToAudioDevice(
   cb: ChunkCallback
 ): Promise<{ recorder: RecordRTC; audioStream: MediaStream }> {
   const audioStream = await navigator.mediaDevices.getUserMedia({
-    audio: inputDevice ? { deviceId: { exact: inputDevice } } : true,
+    audio: inputDevice
+      ? {
+          deviceId: { exact: inputDevice },
+          // noiseSuppression: true,
+          // echoCancellation: true,
+        }
+      : true,
   });
 
   const RecordRTC = (await import("recordrtc")).default;

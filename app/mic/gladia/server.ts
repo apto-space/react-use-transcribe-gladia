@@ -1,4 +1,4 @@
-import { z } from "~/node_modules/zod/lib/external";
+import { z } from "zod";
 import { SAMPLE_RATE } from "./SAMPLE_RATE";
 
 // this can also be done on the server and forwarded to client for security
@@ -14,6 +14,9 @@ export async function initiateSession(
     },
     body: JSON.stringify({
       sample_rate: SAMPLE_RATE,
+      pre_processing: {
+        speech_threshold: 0.8,
+      },
     }),
   });
   if (!response.ok) {
@@ -24,4 +27,23 @@ export async function initiateSession(
   }
   const data = await response.json();
   return z.object({ url: z.string() }).parse(data);
+}
+
+export async function POST() {
+  if (!process.env.GLADIA_API_KEY) {
+    return Response.json(
+      { error: "GLADIA_API_KEY is not configured" },
+      { status: 500 }
+    );
+  }
+
+  try {
+    const session = await initiateSession(process.env.GLADIA_API_KEY);
+    return Response.json(session);
+  } catch (error) {
+    return Response.json(
+      { error: error instanceof Error ? error.message : "Unknown error" },
+      { status: 500 }
+    );
+  }
 }

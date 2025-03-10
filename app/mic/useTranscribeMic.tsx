@@ -1,88 +1,54 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { GladiaWsMessage } from "../gladia-types";
-import { createGladiaWebSocket } from "./gladia/client";
-import { initiateSession } from "./gladia/server";
+import { connectToGladia } from "./connectToGladia";
 import { ChunkCallback, listenToAudioDevice } from "./listenToChunks";
-import { useMic } from "./useMic";
+import { useMics } from "./useMics";
 
-export const connectToGladia =
-  (gladia_api_key: string) => async (cb: (msg: GladiaWsMessage) => void) => {
-    const session = await initiateSession(gladia_api_key);
-    const { sendBuffer, close } = createGladiaWebSocket(session, {
-      onMessage: (data) => {
-        cb(data);
-      },
-    });
-    return { sendBuffer, close };
-  };
+export interface UseTranscribeMicProps {
+  endpoint?: string;
+}
 
-const useTranscribeMic = ({ gladia_api_key }: { gladia_api_key: string }) => {
-  const audioDevices = useMic();
-
-  return audioDevices.map((device) => {
-    return {
-      device,
-      stream: (cb: ChunkCallback) => listenToAudioDevice(device.deviceId, cb),
-      streamTranscribe: async (cb: (msg: GladiaWsMessage) => void) => {
-        const { sendBuffer, close } = await connectToGladia(gladia_api_key)(cb);
-        const { recorder, audioStream } = await listenToAudioDevice(
-          device.deviceId,
-          sendBuffer
-        );
-        return () => {
-          close();
-          recorder.stopRecording();
-          recorder.destroy();
-          audioStream.getTracks().forEach((track) => track.stop());
-        };
-      },
-    };
-  });
-};
-
-export const MicTest = (args: { gladia_api_key: string }) => {
-  const mics = useTranscribeMic(args);
-  const [openSockets, setOpenSockets] = useState<(() => void)[]>([]);
-  useEffect(() => {
-    return () => {
-      openSockets.forEach((x) => x());
-    };
-  }, []);
+export const useTranscribeMic = ({ endpoint }: UseTranscribeMicProps = {}) => {
+  const status = useMics();
   const [messages, setMessages] = useState<GladiaWsMessage[]>([]);
-  return (
-    <div>
-      {openSockets.length ? (
-        <button
-          onClick={() => {
-            openSockets.forEach((x) => x());
-            setOpenSockets([]);
-          }}
-        >
-          close
-        </button>
-      ) : (
-        "no open sockets"
-      )}
-      {mics.length ? "" : "no mics found"}
-      {mics.map((m) => {
-        return (
-          <div key={m.device.deviceId}>
-            {m.device.label}
-            <button
-              onClick={async () => {
-                const closeConn = await m.streamTranscribe((x) => {
-                  setMessages((messages) => [...messages, x]);
-                });
-                setOpenSockets([...openSockets, closeConn]);
-              }}
-            >
-              {"stream transcribe "}
-            </button>
-          </div>
-        );
-      })}
-      {JSON.stringify(messages, null, 2)}
-    </div>
-  );
+  const [activeMic, setActiveMic] = useState<{
+    device: MediaDeviceInfo;
+    close: () => void;
+  } | null>(null);
+  if (status.type === "ready") {
+    const mics = status.mics.audioDevices.map((device) => {
+      return {
+        device,
+        stream: (cb: ChunkCallback) => listenToAudioDevice(device.deviceId, cb),
+        streamTranscribe: async () => {
+          const { sendBuffer, close } = await connectToGladia(endpoint)(
+            (msg: GladiaWsMessage) => {
+              setMessages((prev) => [...prev, msg]);
+            }
+          );
+          const { recorder, audioStream } = await listenToAudioDevice(
+            device.deviceId,
+            sendBuffer
+          );
+
+          setActiveMic({
+            device,
+            close: () => {
+              close();
+              recorder.stopRecording();
+              recorder.destroy();
+              audioStream.getTracks().forEach((track) => track.stop());
+              setActiveMic(null);
+            },
+          });
+        },
+      };
+    });
+    if (activeMic) {
+      return { type: "transcribing" as const, activeMic, mics, messages };
+    }
+    return { ...status, mics, messages };
+  }
+  return status;
 };
