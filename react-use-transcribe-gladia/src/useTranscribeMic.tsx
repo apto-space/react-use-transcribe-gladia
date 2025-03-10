@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { GladiaWsMessage } from "../gladia-types";
+import { GladiaWsMessage } from "./gladia/gladia-types";
 import { connectToGladia } from "./connectToGladia";
 import { ChunkCallback, listenToAudioDevice } from "./listenToChunks";
 import { useMics } from "./useMics";

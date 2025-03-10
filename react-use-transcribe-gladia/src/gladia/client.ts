@@ -1,12 +1,6 @@
-import {
-  GladiaWsMessage,
-  GladiaWsMessageSchema,
-} from "../../../app/gladia-types";
+import { GladiaWsMessage, GladiaWsMessageSchema } from "./gladia-types";
 
-export {
-  GladiaWsMessage,
-  GladiaWsMessageSchema,
-} from "../../../app/gladia-types";
+export { GladiaWsMessage, GladiaWsMessageSchema } from "./gladia-types";
 
 type GladiaWebSocket = {
   sendBuffer: (buffer: ArrayBuffer) => void;

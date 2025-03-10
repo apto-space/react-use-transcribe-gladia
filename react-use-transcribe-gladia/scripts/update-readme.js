@@ -3,7 +3,7 @@ const path = require("path");
 
 // Paths are relative to the project root
 const README_PATH = path.join(__dirname, "../..", "README.md");
-const DEMO_PATH = path.join(__dirname, "..", "src", "Demo.tsx");
+const DEMO_PATH = path.join(__dirname, "..", "src", "MicTest.tsx");
 const PACKAGE_JSON_PATH = path.join(__dirname, "..", "package.json");
 
 // Read files
@@ -18,11 +18,20 @@ const transformedDemoContent = demoContent
   .replace(/from "\.\/(.*?)"/g, (match, p1) => `from "${packageName}/${p1}"`);
 
 // Regular expression to match the example code block in README
-const codeBlockRegex = /```tsx \.\/src\/Demo\.tsx[\s\S]*?```/;
+const codeBlockRegex = /```tsx \.\/src\/MicTest\.tsx[\s\S]*?```/;
+
+// Check if the code block exists
+if (!codeBlockRegex.test(readmeContent)) {
+  console.error("❌ Error: Could not find the code block in README.md");
+  console.error(
+    "Expected to find a code block starting with: ```tsx ./src/MicTest.tsx"
+  );
+  process.exit(1);
+}
 
 // Create the new code block with the transformed Demo.tsx content
 const newCodeBlock =
-  "```tsx ./src/Demo.tsx\n" + transformedDemoContent + "\n```";
+  "```tsx ./src/MicTest.tsx\n" + transformedDemoContent + "\n```";
 
 // Replace the old code block with the new one
 const updatedReadme = readmeContent.replace(codeBlockRegex, newCodeBlock);
